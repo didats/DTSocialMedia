@@ -17,6 +17,9 @@
 		private $num;
 		private $type, $user, $url_to_grab;
 		
+		// let the user cache the content by giving them
+		public $content_data;
+		
 		// create url for grabbing the data
 		private $grabber = array(
 			'feed' => "http://ajax.googleapis.com/ajax/services/feed/load?v=1.0&num=|num|&q=|user|",
@@ -24,7 +27,7 @@
 			'youtube' => "https://gdata.youtube.com/feeds/api/users/|user|/uploads?alt=json&max-results=|num|",
 			'twitter' => "https://api.twitter.com/1/statuses/user_timeline.json?include_entities=true&include_rts=true&screen_name=|user|&count=|num|",
 			'flickr' => "http://api.flickr.com/services/feeds/photos_public.gne?id=|user|",
-			'pinterest' => "http://pinterest.com/|user|/feed.rss",
+			'pinterest' => "http://ajax.googleapis.com/ajax/services/feed/load?v=1.0&num=|num|&q=http://pinterest.com/|user|/feed.rss",
 			'instagram' => "https://api.instagram.com/v1/users/|user|/media/recent?access_token=15969682.ea0ab38.440546b46f334ee58deafa52dec661d5&client_id=ea0ab38daabd4d9594b8a4219e80b41a"
 			
 		);
@@ -136,28 +139,58 @@
 			// create an array to fetch all the data
 			$arr_result = array();
 			
-			// feed, facebook, and pinterest are using RSS feed.
+			// feed, and pinterest are using RSS feed.
 			// so we can use google apis to make the return data exactly the same
-			if($this->type == "feed" || $this->type == "facebook" || $this->type == "pinterest") {
+			if($this->type == "feed" || $this->type == "pinterest") {
 				$content = json_decode($this->get_content());
 				
 				$entries = $content->responseData->feed->entries;
 				for($i=0;$i<count($entries);$i++) {
-					array_push($arr_result, array('title' => $entries[$i]->title, 'date' => strtotime($entries[$i]->publishedDate), 'link' => $entries[$i]->link));
+					
+					$arr_new = array('title' => $entries[$i]->title, 'date' => strtotime($entries[$i]->publishedDate), 'link' => $entries[$i]->link);
+					
+					preg_match('/src="([^"]+)"/', $entries[$i]->content, $match);
+					if(isset($match[1])) $arr_new['image'] = $match[1];
+					
+					array_push($arr_result, $arr_new);
+				}
+			}
+			// facebook
+			elseif($this->type == "facebook") {
+				$content = $this->get_content();
+				$arr_data = $this->xml2array($content);
+				
+				$entries = $arr_data['rss']['_c']['channel']['_c']['item'];
+				for($i = 0; $i<count($entries); $i++) {
+					$item = $entries[$i]['_c'];
+					
+					$title = $item['title']['_v'];
+					$link = $item['link']['_v'];
+					$date = strtotime($item['pubDate']['_v']);
+					
+					$desc = $item['description']['_v'];
+					preg_match('/src="([^"]+)"/', $desc, $match);
+					
+					$arr_new = array('title' => $title, 'date' => $date, 'link' => $link);
+					
+					if(isset($match[1])) $arr_new['image'] = $match[1];
+					//$image = $item['link'][2]['_a']['href'];
+					
+					array_push($arr_result, $arr_new);
 				}
 			}
 			// youtube 
 			elseif($this->type == "youtube") {
 				$content = json_decode($this->get_content());
-				$items = $content['feed']['entry'];
+				$items = $content->feed->entry;
 				
 				for($i=0;$i<count($items);$i++) {
 					
-					$url_item = $items[$i]['link']['href'];
+					$url_item = $items[$i]->link->href;
 					preg_match("v=([^&]+)", $url_item, $match);
 					$url_id = $match[1];
 					
-					array_push($arr_result, array('title' => $items[$i]['title']['$t'], 'date' => strtotime($items[$i]['updated']['$t']), 'image' => 'http://img.youtube.com/vi/$url_id/0.jpg'));
+					array_push($arr_result, array('title' => $items[$i]->title->{'$t'}, 'date' => strtotime($items[$i]->updated->{'$t'}), 'image' => 'http://img.youtube.com/vi/$url_id/0.jpg'));
 				}
 			}
 			// twitter
@@ -172,15 +205,15 @@
 			// flickr
 			elseif($this->type == "flickr") {
 				$content = $this->get_content();
-				
 				$arr_data = $this->xml2array($content);
+				
 				$entries = $arr_data['feed']['_c']['entry'];
 				for($i=0;$i<count($entries);$i++) {
 					$item = $entries[$i]['_c'];
 					$title = $item['title']['_v'];
 					$link = $item['link'][0]['_a']['href'];
 					$date = $item['published']['_v'];
-					$image = $item['link'][2]['_a']['href'];
+					$image = $item['link'][1]['_a']['href'];
 					
 					array_push($arr_result, array('title' => $title, 'date' => strtotime($date), 'link' => $link, 'image' => $image));
 				}
@@ -201,6 +234,7 @@
 				}
 			}
 			
+			$this->content_data = json_encode($arr_result);
 			
 			return $arr_result;
 		}
@@ -210,6 +244,8 @@
 			$this->type = $type;
 			$this->user = $user;
 			$this->num = $num;
+			
+/* 			echo $this->url." / ".$this->type." / ".$this->user; */
 			
 			return $this->load_data();
 		}
