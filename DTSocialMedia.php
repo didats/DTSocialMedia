@@ -17,6 +17,9 @@
 		private $num;
 		private $type, $user, $url_to_grab;
 		
+		private $access_token = "--- Enter your instagram access token ---";
+		private $client_id = "--- Enter your client id here ---";
+		
 		// let the user cache the content by giving them
 		public $content_data;
 		
@@ -28,7 +31,7 @@
 			'twitter' => "https://api.twitter.com/1/statuses/user_timeline.json?include_entities=true&include_rts=true&screen_name=|user|&count=|num|",
 			'flickr' => "http://api.flickr.com/services/feeds/photos_public.gne?id=|user|",
 			'pinterest' => "http://ajax.googleapis.com/ajax/services/feed/load?v=1.0&num=|num|&q=http://pinterest.com/|user|/feed.rss",
-			'instagram' => "https://api.instagram.com/v1/users/|user|/media/recent?access_token=15969682.ea0ab38.440546b46f334ee58deafa52dec661d5&client_id=ea0ab38daabd4d9594b8a4219e80b41a"
+			'instagram' => "https://api.instagram.com/v1/users/|user|/media/recent?access_token=|access_token|&client_id=|client_id|"
 			
 		);
 		
@@ -133,7 +136,7 @@
 		
 		public function load_data() {
 			// replace the |user| and |num| with the variable that user sent.
-			$real_url = preg_replace(array('/\|num\|/', '/\|user\|/'),	array($this->num, $this->user), $this->url);
+			$real_url = preg_replace(array('/\|num\|/', '/\|user\|/', '/\|access_token|\/', '/\|client_id|\/'),	array($this->num, $this->user, $this->access_token, $this->client_id), $this->url);
 			$this->url = $real_url;
 			
 			// create an array to fetch all the data
@@ -220,6 +223,7 @@
 			}
 			// instagram
 			elseif($this->type == "instagram") {
+				
 				$content = json_decode($this->get_content());
 				
 				for($i=0;$i<count($content->data);$i++) {

@@ -15,7 +15,7 @@ Our client asking for a mobile app which showing their timeline on various socia
 
 For Flickr, you will need to provide the user ID, which you can get it from here: [http://idgettr.com/](http://idgettr.com/).
 
-For Instagram, you will need to provide the user ID as well. You could get the user id from here: [http://jelled.com/instagram/lookup-user-id](http://jelled.com/instagram/lookup-user-id)
+For Instagram, you will need to provide the user ID as well. You could get the user id from here: [http://jelled.com/instagram/lookup-user-id](http://jelled.com/instagram/lookup-user-id). And don't forget to put the Access Token and Client ID on the class file.
 
 
 ## Usage
