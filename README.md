@@ -11,6 +11,10 @@ Our client asking for a mobile app which showing their timeline on various socia
 
 [@didats](https://twitter.com/didats)
 
+## Update on new Twitter API
+
+So the Twitter Rest API has changed. You will need to create an application [http://dev.twitter.com](http://dev.twitter.com) in order to get the Consumer Key, Consumer Secret, Access Token, and Access Token secret. A sample script to access the  users's timeline is provided
+
 ## Some Information
 
 For Flickr, you will need to provide the user ID, which you can get it from here: [http://idgettr.com/](http://idgettr.com/).
