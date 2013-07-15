@@ -1,4 +1,5 @@
 <?php
+require_once("twitteroauth.php");
 	/*
 	
 	DTSocialMedia v.1.0
@@ -12,10 +13,15 @@
 	
 	*/
 	
-	class DTSocialMedia {
+	class DTSocialMedia extends TwitterOAuth {
 		
 		private $num;
 		private $type, $user, $url_to_grab;
+		
+		public $consumerkey = "";
+		public $consumersecret = "";
+		public $accesstoken = "";
+		public $accesstokensecret = "";
 		
 		// let the user cache the content by giving them
 		public $content_data;
@@ -131,6 +137,11 @@
 		    $ary=array_merge($ar1, array_slice($ary, $pos));
 		}
 		
+		function getConnectionWithAccessToken() {
+			$connection = new TwitterOAuth($this->consumerkey, $this->consumersecret, $this->accesstoken, $this->accesstokensecret);
+			return $connection;
+		}
+		
 		public function load_data() {
 			// replace the |user| and |num| with the variable that user sent.
 			$real_url = preg_replace(array('/\|num\|/', '/\|user\|/'),	array($this->num, $this->user), $this->url);
@@ -197,12 +208,20 @@
 			}
 			// twitter
 			elseif($this->type == "twitter") {
-				$content = json_decode($this->get_content());
-				
-				
-				for($i=0;$i<count($content);$i++) {
-					array_push($arr_result, array('title' => $content[$i]->text, 'date' => strtotime($content[$i]->created_at), 'link' => "https://twitter.com/".$this->user."/status/".$content[$i]->id));
+				// check if the user has set the required keys
+				if($this->consumerkey == "" || $this->consumersecret == "" || $this->accesstoken == "" || $this->accesstokensecret == "") {
+					
 				}
+				else {
+					$connection = $this->getConnectionWithAccessToken();
+ 
+					$content = $connection->get("https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=".$this->user."&count=".$this->num);
+					
+					for($i=0;$i<count($content);$i++) {
+						array_push($arr_result, array('title' => $content[$i]->text, 'date' => strtotime($content[$i]->created_at), 'link' => "https://twitter.com/".$this->user."/status/".$content[$i]->id));
+					}
+				}
+				
 			}
 			// flickr
 			elseif($this->type == "flickr") {
