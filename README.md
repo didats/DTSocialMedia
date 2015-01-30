@@ -1,3 +1,5 @@
+[![Rimbunesia](http://rimbunesia.com/images/github-rimbunesia.png)](http://rimbunesia.com)
+
 # DTSocialMedia
 
 DTSocialMedia is a PHP class to get the user's timeline from various social media. Currently it support Facebook, Twitter, Pinterest, Youtube, Instagram, Flickr, and RSS Feed.
